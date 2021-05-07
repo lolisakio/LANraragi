@@ -21,10 +21,10 @@ sub plugin_info {
 
     return (
         #Standard metadata
-        name      => "Filename Parsing",
+        name      => "Filename Parsing2",
         type      => "metadata",
-        namespace => "regexplugin",
-        author    => "Difegue",
+        namespace => "regexplugin1",
+        author    => "lolisakio",
         version   => "1.0",
         description =>
           "Derive tags from the filename of the given archive. <br>Follows the doujinshi naming standard (Release) [Artist] TITLE (Series) [Language].",
@@ -52,8 +52,8 @@ sub get_tags {
     # Get the filename from the file_path info field
     my ( $filename, $filepath, $suffix ) = fileparse( $file, qr/\.[^.]*/ );
 
-    my ( $event, $artist, $title, $series, $language );
-    $event = $artist = $title = $series = $language = "";
+    my ( $event, $artist, $title, $series, $language, $id );
+    $event = $artist = $title = $series = $language = $id = "";
 
     #Replace underscores with spaces
     $filename =~ s/_/ /g;
@@ -62,12 +62,20 @@ sub get_tags {
     $filename =~ &get_regex;
 
     #Take variables from the regex selection
+    /*
     if ( defined $2 ) { $event    = $2; }
     if ( defined $4 ) { $artist   = $4; }
     if ( defined $5 ) { $title    = $5; }
     if ( defined $7 ) { $series   = $7; }
     if ( defined $9 ) { $language = $9; }
+    */
+    
+    if ( defined $2 ) { $artist   = $2; }
+    if ( defined $4 ) { $language = $4; }
+    if ( defined $5 ) { $title    = $5; }
+    if ( defined $7 ) { $id       = $7; }
 
+    
     my @tags = ();
 
     if ( $event ne "" ) {
@@ -110,6 +118,7 @@ sub get_tags {
 }
 
 #Regular Expression matching the E-Hentai standard: (Release) [Artist] TITLE (Series) [Language]
+#Regular Expression  Hitomi downloader : [Artist] [Language] TITLE (id)
 #Used in parsing.
 #Stuff that's between unescaped ()s is put in a numbered variable: $1,$2,etc
 #Parsing is only done the first time the file is found. The parsed info is then stored into Redis.
@@ -122,7 +131,12 @@ sub get_tags {
 #(\(([^([)]+)\))? returns the content of (Series). Optional.
 #(\[([^]]+)\])? returns the content of [Language]. Optional.
 #\s* indicates zero or more whitespaces.
-my $regex = qr/(\(([^([]+)\))?\s*(\[([^]]+)\])?\s*([^([]+)\s*(\(([^([)]+)\))?\s*(\[([^]]+)\])?/;
+
+my $regex = qr/(\[([^]]+)\])?\s*(\[([^]]+)\])?\s*([^([]+)\s*(\(([^([]+)\))?/;
+#            1      2        3         4          5       6      7                                                        
+                                                                 
+#my $regex = qr/  (\(([^([]+)\))?  \s*  (\[([^]]+)\])?  \s*  ([^([]+)  \s*  (\(([^([)]+)\))?  \s*  (\[([^]]+)\])?/;
+#               1         2         3          4                 5       6           7          8           9
 sub get_regex { return $regex }
 
 1;
