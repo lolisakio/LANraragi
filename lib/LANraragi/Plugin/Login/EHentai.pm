@@ -22,7 +22,8 @@ sub plugin_info {
         parameters => [
             { type => "int",    desc => "ipb_member_id cookie" },
             { type => "string", desc => "ipb_pass_hash cookie" },
-            { type => "string", desc => "star cookie (optional, if present you can view fjorded content without exhentai)" }
+            { type => "string", desc => "star cookie (optional, if present you can view fjorded content without exhentai)" },
+            { type => "string", desc => "igneous cookie for log on exhentai"}
         ]
     );
 
@@ -34,8 +35,8 @@ sub do_login {
 
     # Login plugins only receive the parameters entered by the user.
     shift;
-    my ( $ipb_member_id, $ipb_pass_hash, $star ) = @_;
-    return get_user_agent( $ipb_member_id, $ipb_pass_hash, $star );
+    my ( $ipb_member_id, $ipb_pass_hash, $star, $igneous ) = @_;
+    return get_user_agent( $ipb_member_id, $ipb_pass_hash, $star, $igneous );
 }
 
 # get_user_agent(ipb cookies)
@@ -43,7 +44,7 @@ sub do_login {
 # Returns the UA object created.
 sub get_user_agent {
 
-    my ( $ipb_member_id, $ipb_pass_hash, $star ) = @_;
+    my ( $ipb_member_id, $ipb_pass_hash, $star, $igneous ) = @_;
 
     my $logger = get_logger( "E-Hentai Login", "plugins" );
     my $ua     = Mojo::UserAgent->new;
@@ -53,6 +54,16 @@ sub get_user_agent {
 
         #Setup the needed cookies with both domains
         #They should translate to exhentai cookies with the igneous value generated
+        
+        $ua->cookie_jar->add(
+            Mojo::Cookie::Response->new(
+                name   => 'igneous',
+                value  => $igneous,
+                domain => 'exhentai.org',
+                path   => '/'
+            )
+        );
+        
         $ua->cookie_jar->add(
             Mojo::Cookie::Response->new(
                 name   => 'ipb_member_id',
